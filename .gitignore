@@ -4,4 +4,4 @@ Debug
 *.o
 *.exe
 *.swp
-TC_provided*
+corpus*
