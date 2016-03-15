@@ -29,6 +29,15 @@ class Categorizer {
 	// Hash table of hash tables that maps words to counts for specific categories
 	unordered_map<string, unordered_map<string, int> *> * wcHash;
 
+	// Total number of documents overall
+	int totalDocuments;
+
+	// Total number of documents per category
+	unordered_map<string, int> * categoryDocuments;
+
+	// Tokenizes a document into a hash table
+	unordered_map<string, int> tokenizeDocument(string);
+
 	// Trains categorizer using a document and its category label
 	void trainFromFile(string, string);
 

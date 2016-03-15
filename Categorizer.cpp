@@ -23,13 +23,18 @@ using namespace std;
 Categorizer::Categorizer() {
 	wHash = new unordered_map<string, int>();
 	wcHash = new unordered_map<string, unordered_map<string, int> *>();
+	totalDocuments = 0;
+	categoryDocuments = new unordered_map<string, int>();
 }
 
-void Categorizer::trainFromFile(string filePath, string category) {
-	ifstream trainFile(filePath);
+unordered_map<string, int> Categorizer::tokenizeDocument(string filePath) {
+	unordered_map<string, int> hash;
+	
+	ifstream file(filePath);
 	char c;
 	string currentWord = "";
-	while (trainFile >> noskipws >> c) {
+
+	while (file >> noskipws >> c) {
 		// Add character to current word if it is not a word delimeter
 		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
 			currentWord += c;
@@ -40,18 +45,10 @@ void Categorizer::trainFromFile(string filePath, string category) {
 				transform(currentWord.begin(), currentWord.end(), currentWord.begin(), ::tolower);
 
 				// Adjust the hash tables
-				if (wHash->find(currentWord) == wHash->end()) {
-					wHash->emplace(currentWord, 1);
+				if (hash.find(currentWord) == hash.end()) {
+					hash.emplace(currentWord, 1);
 				} else {
-					(wHash->at(currentWord))++;
-				}
-				if (wcHash->find(category) == wcHash->end()) {
-					wcHash->emplace(category, new unordered_map<string, int>);
-				}
-				if (wcHash->at(category)->find(currentWord) == wcHash->at(category)->end()) {
-					wcHash->at(category)->emplace(currentWord, 1);
-				} else {
-					(wcHash->at(category)->at(currentWord))++;
+					hash.at(currentWord)++;
 				}
 
 				// Reset the current word
@@ -59,8 +56,31 @@ void Categorizer::trainFromFile(string filePath, string category) {
 			}
 		}
 	}
+	file.close();
 
-	trainFile.close();
+	return hash;
+}
+
+void Categorizer::trainFromFile(string filePath, string category) {
+	// Get tokenized document as a hash table
+	unordered_map<string, int> tokens = tokenizeDocument(filePath);
+
+	for (unordered_map<string, int>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+		// Adjust the hash tables
+		if (wHash->find(it->first) == wHash->end()) {
+			wHash->emplace(it->first, it->second);
+		} else {
+			(wHash->at(it->first))++;
+		}
+		if (wcHash->find(category) == wcHash->end()) {
+			wcHash->emplace(category, new unordered_map<string, int>);
+		}
+		if (wcHash->at(category)->find(it->first) == wcHash->at(category)->end()) {
+			wcHash->at(category)->emplace(it->first, it->second);
+		} else {
+			(wcHash->at(category)->at(it->first))++;
+		}
+	}
 }
 
 void Categorizer::Train(string fileName) {
@@ -75,9 +95,16 @@ void Categorizer::Train(string fileName) {
 		ss >> filePath >> category;
 
 		trainFromFile(filePath, category);
+		totalDocuments++;
+		if (categoryDocuments->find(category) == categoryDocuments->end()) {
+			categoryDocuments->emplace(category, 1);
+		} else {
+			categoryDocuments->at(category)++;
+		}
 		
 		ss.clear();
 	}
+	return;
 }
 
 void Categorizer::Test(string testFileName, string outputFileName) {
