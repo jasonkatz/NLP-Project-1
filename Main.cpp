@@ -25,11 +25,13 @@ int main() {
 	// Get input filenames
 	string trainFileName;
 	cout << "Enter the filename of a list of labeled training documents: ";
-	cin >> trainFileName;
+	//cin >> trainFileName;
+	trainFileName = "corpus1_train.labels";
 
 	string testFileName;
 	cout << "Enter the filename of a list of unlabeled testing documents: ";
-	cin >> testFileName;
+	//cin >> testFileName;
+	testFileName = "corpus1_test.list";
 
 	// Train categorizer
 	Categorizer categorizer;
@@ -38,7 +40,8 @@ int main() {
 	// Get output filename
 	string outputFileName;
 	cout << "Enter the name of an output file: ";
-	cin >> outputFileName;
+	//cin >> outputFileName;
+	outputFileName = "out";
 
 	categorizer.Test(testFileName, outputFileName);
 
