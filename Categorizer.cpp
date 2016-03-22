@@ -16,6 +16,8 @@ definitions and algorithms
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
+#include <climits>
 #include "Categorizer.h"
 
 using namespace std;
@@ -83,12 +85,54 @@ void Categorizer::trainFromFile(string filePath, string category) {
 	}
 }
 
-void Categorizer::Train(string fileName) {
+string Categorizer::estimateFile(string fileName, unordered_map<string, double> categoryProbabilities) {
+	unordered_map<string, int> tokens = tokenizeDocument(fileName);
+
+	// Set prior probabilities
+	for (unordered_map<string, double>::iterator it = categoryProbabilities.begin(); it != categoryProbabilities.end(); ++it) {
+		categoryProbabilities.at(it->first) = log(((double) categoryDocuments->at(it->first)) / ((double) totalDocuments));
+	}
+	
+	// Find each category probability based on prior and word probabilities
+	for (unordered_map<string, double>::iterator it = categoryProbabilities.begin(); it != categoryProbabilities.end(); ++it) {
+		double logProduct = 0;
+		int totalCount = 0;
+		// Get total word count in category
+		for (unordered_map<string, int>::iterator it2 = wcHash->at(it->first)->begin(); it2 != wcHash->at(it->first)->end(); ++it2) {
+			totalCount += it2->second;
+		}
+		// Find each test word probability in category
+		for (unordered_map<string, int>::iterator it2 = tokens.begin(); it2 != tokens.end(); ++it2) {
+			int wordFreq = 0;
+			if (wcHash->at(it->first)->find(it2->first) != wcHash->at(it->first)->end()) {
+				wordFreq = wcHash->at(it->first)->at(it2->first);
+			}
+			//logProduct += log(((double) wordFreq + 1) / ((double) totalCount + wcHash->at(it->first)->size())); // Laplace smoothing
+			logProduct += log(((double) wordFreq + 1) / ((double) totalCount + wHash->size())); // Laplace smoothing
+		}
+
+		categoryProbabilities.at(it->first) += logProduct;
+	}
+
+	// Return the name of the category with highest likelihood
+	int largest = INT_MIN;
+	string largestName = "";
+	for (unordered_map<string, double>::iterator it = categoryProbabilities.begin(); it != categoryProbabilities.end(); ++it) {
+		if (it->second > ((double) largest)) {
+			largestName = it->first;
+			largest = (int) it->second;
+		}
+	}
+
+	return largestName;
+}
+
+void Categorizer::Train(string trainFileName) {
 	string line;
 	stringstream ss;
 
 	// Process every document on the provided list
-	ifstream trainListFile(fileName);
+	ifstream trainListFile(trainFileName);
 	while (getline(trainListFile, line)) {
 		ss.str(line);
 		string filePath, category;
@@ -104,9 +148,32 @@ void Categorizer::Train(string fileName) {
 		
 		ss.clear();
 	}
-	return;
 }
 
 void Categorizer::Test(string testFileName, string outputFileName) {
+	// Set up hash table of probability estimates for each category based on training data (so we don't have to do this more than once)
+	unordered_map<string, double> categories;
+	for (unordered_map<string, int>::iterator it = categoryDocuments->begin(); it != categoryDocuments->end(); ++it) {
+		categories.emplace(it->first, 0);
+	}
 
+	string line;
+	stringstream ss;
+
+	// Process every document on the provided list and output the result to the output file
+	ifstream trainListFile(testFileName);
+	ofstream outputFile(outputFileName);
+	while (getline(trainListFile, line)) {
+		ss.str(line);
+		string filePath;
+		ss >> filePath;
+
+		string estimatedCategory = estimateFile(filePath, categories);
+
+		outputFile << filePath << " " << estimatedCategory << "\n";
+
+		ss.clear();
+	}
+	outputFile.close();
+	trainListFile.close();
 }

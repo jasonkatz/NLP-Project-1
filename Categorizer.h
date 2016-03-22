@@ -41,6 +41,9 @@ class Categorizer {
 	// Trains categorizer using a document and its category label
 	void trainFromFile(string, string);
 
+	// Estimates the category of a file using the trained categorizer and provided categories
+	string estimateFile(string, unordered_map<string, double>);
+
 public:
 
 	// Constructor that simply initializes the hash tables
