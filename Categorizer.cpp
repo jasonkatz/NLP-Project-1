@@ -18,7 +18,9 @@ definitions and algorithms
 #include <algorithm>
 #include <cmath>
 #include <climits>
+
 #include "Categorizer.h"
+#include "porter2_stemmer.h"
 
 using namespace std;
 
@@ -45,6 +47,10 @@ unordered_map<string, int> Categorizer::tokenizeDocument(string filePath) {
 			if (currentWord != "") {
 				// Convert the word to lower case
 				transform(currentWord.begin(), currentWord.end(), currentWord.begin(), ::tolower);
+
+				// Put word through stemmer
+				Porter2Stemmer::trim(currentWord);
+				Porter2Stemmer::stem(currentWord);
 
 				// Adjust the hash tables
 				if (hash.find(currentWord) == hash.end()) {

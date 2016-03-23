@@ -5,3 +5,6 @@ Debug
 *.exe
 *.swp
 corpus*
+/out
+/packages.config
+/Jason Katz NLP Project 1.zip
