@@ -36,6 +36,7 @@ int main() {
 	// Train categorizer
 	Categorizer categorizer;
 	categorizer.Train(trainFileName);
+    return 0;
 
 	// Get output filename
 	string outputFileName;
