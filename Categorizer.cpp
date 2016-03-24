@@ -48,10 +48,6 @@ unordered_map<string, int> Categorizer::tokenizeDocument(string filePath) {
 				// Convert the word to lower case
 				transform(currentWord.begin(), currentWord.end(), currentWord.begin(), ::tolower);
 
-				// Put word through stemmer
-				Porter2Stemmer::trim(currentWord);
-				Porter2Stemmer::stem(currentWord);
-
 				// Adjust the hash tables
 				if (hash.find(currentWord) == hash.end()) {
 					hash.emplace(currentWord, 1);
